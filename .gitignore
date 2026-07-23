@@ -1,0 +1,12 @@
+.DS_Store
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.ipa
+*.mobileprovision
+*.cer
+*.p12
+*.key
+local.properties
+.gradle/
+**/build/
