@@ -76,4 +76,37 @@ enum BlockerRules {
       }, true);
     })();
     """#
+
+    static let fullscreenTrackingScript = #"""
+    (() => {
+      const handler = window.webkit
+        && window.webkit.messageHandlers
+        && window.webkit.messageHandlers.blackBeardFullscreen;
+
+      if (!handler) return;
+
+      const frameID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      let lastReportedState = false;
+
+      const report = (fullscreen) => {
+        const nextState = Boolean(fullscreen);
+        if (nextState === lastReportedState) return;
+        lastReportedState = nextState;
+        handler.postMessage({ frameID, fullscreen: nextState });
+      };
+
+      const reportDocumentState = () => {
+        report(Boolean(document.fullscreenElement || document.webkitFullscreenElement));
+      };
+
+      document.addEventListener("fullscreenchange", reportDocumentState, true);
+      document.addEventListener("webkitfullscreenchange", reportDocumentState, true);
+
+      // iPhone's native video player uses these WebKit-specific events.
+      document.addEventListener("webkitbeginfullscreen", () => report(true), true);
+      document.addEventListener("webkitendfullscreen", () => report(false), true);
+
+      window.addEventListener("pagehide", () => report(false), true);
+    })();
+    """#
 }

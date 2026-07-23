@@ -46,7 +46,8 @@ signing.
 - Trigger or encounter a popup and confirm it does not create a new window.
 - Confirm an external redirect or app-opening link is blocked.
 - Start a video, enter fullscreen, rotate to landscape, then leave fullscreen
-  and rotate back to portrait.
+  and rotate back to portrait. Confirm the BlackBeard bottom bar hides while
+  fullscreen is active and returns after fullscreen closes.
 - Tap the grid button in the bottom bar and confirm it returns to the BlackBeard
   site-selection screen.
 

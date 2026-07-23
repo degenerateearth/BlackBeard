@@ -11,8 +11,12 @@ struct ContentView: View {
                 BrowserView(controller: browser)
                     .ignoresSafeArea(.container, edges: .top)
                     .safeAreaInset(edge: .bottom, spacing: 0) {
-                        browserBar
+                        if !browser.isFullscreen {
+                            browserBar
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                        }
                     }
+                    .animation(.easeInOut(duration: 0.18), value: browser.isFullscreen)
             }
         }
         .background(Color.black)

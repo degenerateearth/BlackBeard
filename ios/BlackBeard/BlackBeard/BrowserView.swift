@@ -2,6 +2,8 @@ import SwiftUI
 import WebKit
 
 struct BrowserView: UIViewRepresentable {
+    private static let fullscreenMessageName = "blackBeardFullscreen"
+
     @ObservedObject var controller: BrowserController
 
     func makeCoordinator() -> Coordinator {
@@ -22,6 +24,14 @@ struct BrowserView: UIViewRepresentable {
                 forMainFrameOnly: false
             )
         )
+        contentController.addUserScript(
+            WKUserScript(
+                source: BlockerRules.fullscreenTrackingScript,
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: false
+            )
+        )
+        contentController.add(context.coordinator, name: Self.fullscreenMessageName)
         configuration.userContentController = contentController
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
@@ -40,11 +50,37 @@ struct BrowserView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
         private let controller: BrowserController
+        private var fullscreenFrames = Set<String>()
 
         init(controller: BrowserController) {
             self.controller = controller
+        }
+
+        func userContentController(
+            _ userContentController: WKUserContentController,
+            didReceive message: WKScriptMessage
+        ) {
+            guard message.name == BrowserView.fullscreenMessageName,
+                  let payload = message.body as? [String: Any],
+                  let frameID = payload["frameID"] as? String,
+                  let fullscreen = payload["fullscreen"] as? Bool else {
+                return
+            }
+
+            if fullscreen {
+                fullscreenFrames.insert(frameID)
+            } else {
+                fullscreenFrames.remove(frameID)
+            }
+
+            controller.setFullscreen(!fullscreenFrames.isEmpty)
+        }
+
+        private func resetFullscreenState() {
+            fullscreenFrames.removeAll()
+            controller.setFullscreen(false)
         }
 
         func installRulesAndLoad(in webView: WKWebView) {
@@ -134,6 +170,7 @@ struct BrowserView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation?) {
+            resetFullscreenState()
             controller.refreshState()
         }
 
@@ -150,6 +187,7 @@ struct BrowserView: UIViewRepresentable {
             didFail navigation: WKNavigation?,
             withError error: Error
         ) {
+            resetFullscreenState()
             controller.refreshState()
         }
 
@@ -158,6 +196,7 @@ struct BrowserView: UIViewRepresentable {
             didFailProvisionalNavigation navigation: WKNavigation?,
             withError error: Error
         ) {
+            resetFullscreenState()
             controller.refreshState()
         }
 

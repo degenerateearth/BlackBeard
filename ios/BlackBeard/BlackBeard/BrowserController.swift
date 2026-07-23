@@ -43,6 +43,7 @@ final class BrowserController: ObservableObject {
     @Published private(set) var canGoBack = false
     @Published private(set) var canGoForward = false
     @Published private(set) var isLoading = false
+    @Published private(set) var isFullscreen = false
     @Published private(set) var blockedNavigationCount = 0
 
     weak var webView: WKWebView?
@@ -66,6 +67,10 @@ final class BrowserController: ObservableObject {
 
     func recordBlockedNavigation() {
         blockedNavigationCount += 1
+    }
+
+    func setFullscreen(_ fullscreen: Bool) {
+        isFullscreen = fullscreen
     }
 
     func goBack() {
@@ -96,6 +101,7 @@ final class BrowserController: ObservableObject {
         canGoBack = false
         canGoForward = false
         isLoading = false
+        isFullscreen = false
         selectedSite = nil
     }
 
