@@ -47,6 +47,7 @@ final class BrowserController: ObservableObject {
     @Published private(set) var blockedNavigationCount = 0
 
     weak var webView: WKWebView?
+    private var refreshScheduled = false
 
     func select(_ site: BrowserSite) {
         blockedNavigationCount = 0
@@ -59,10 +60,31 @@ final class BrowserController: ObservableObject {
     }
 
     func refreshState() {
-        guard let webView else { return }
-        canGoBack = webView.canGoBack
-        canGoForward = webView.canGoForward
-        isLoading = webView.isLoading
+        guard !refreshScheduled else { return }
+        refreshScheduled = true
+
+        // WKNavigationDelegate can call this while SwiftUI is updating the
+        // representable. Publish on the next main-loop pass to avoid mutating
+        // observable state from inside that view update.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.refreshScheduled = false
+            guard let webView = self.webView else { return }
+
+            let nextCanGoBack = webView.canGoBack
+            let nextCanGoForward = webView.canGoForward
+            let nextIsLoading = webView.isLoading
+
+            if self.canGoBack != nextCanGoBack {
+                self.canGoBack = nextCanGoBack
+            }
+            if self.canGoForward != nextCanGoForward {
+                self.canGoForward = nextCanGoForward
+            }
+            if self.isLoading != nextIsLoading {
+                self.isLoading = nextIsLoading
+            }
+        }
     }
 
     func recordBlockedNavigation() {
