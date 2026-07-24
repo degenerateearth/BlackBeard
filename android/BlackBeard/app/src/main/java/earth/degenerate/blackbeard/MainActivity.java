@@ -1,8 +1,10 @@
 package earth.degenerate.blackbeard;
 
 import android.annotation.SuppressLint;
+import android.webkit.JavascriptInterface;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -19,6 +21,8 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
+import android.webkit.JsPromptResult;
+import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -43,15 +47,123 @@ public final class MainActivity extends Activity {
     private static final int GOLD = Color.rgb(199, 156, 82);
     private static final int GOLD_BORDER = Color.rgb(136, 99, 49);
 
-    private static final String PAGE_PROTECTION_SCRIPT =
-        "(function(){try{" +
-        "window.open=function(){return null;};" +
-        "function clean(root){if(!root||!root.querySelectorAll)return;" +
-        "root.querySelectorAll('a[target=\\\"_blank\\\"],a[target=\\\"_new\\\"]').forEach(function(a){a.removeAttribute('target');a.removeAttribute('rel');});}" +
-        "clean(document);" +
-        "new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(clean);});}).observe(document.documentElement||document,{childList:true,subtree:true});" +
-        "document.addEventListener('click',function(e){var n=e.target;var a=n&&n.closest?n.closest('a[target=\\\"_blank\\\"],a[target=\\\"_new\\\"]'):null;if(a)a.removeAttribute('target');},true);" +
-        "}catch(e){}})();";
+    private static final String PAGE_PROTECTION_SCRIPT = """
+        (function(){
+          try {
+            window.open = function(){ return null; };
+            window.alert = function(){};
+            window.confirm = function(){ return false; };
+            window.prompt = function(){ return null; };
+
+            function cleanLinks(root) {
+              if (!root || !root.querySelectorAll) return;
+              root.querySelectorAll('a[target="_blank"],a[target="_new"]').forEach(function(link) {
+                link.removeAttribute('target');
+                link.removeAttribute('rel');
+              });
+            }
+
+            function isCompactAdOverlay(element) {
+              if (!element || element.nodeType !== 1) return false;
+              if (element.matches('[data-shb]')) return true;
+              if (element.tagName !== 'IFRAME') return false;
+              var style = getComputedStyle(element);
+              var rect = element.getBoundingClientRect();
+              var zIndex = parseInt(style.zIndex, 10);
+              return (style.position === 'fixed' || style.position === 'absolute')
+                && Number.isFinite(zIndex)
+                && zIndex >= 1000000
+                && rect.width >= 100
+                && rect.height >= 80
+                && rect.width <= 620
+                && rect.height <= 620;
+            }
+
+            function removeOverlay(element) {
+              if (isCompactAdOverlay(element)) element.remove();
+            }
+
+            function sweep(root) {
+              if (!root || !root.querySelectorAll) return;
+              cleanLinks(root);
+              removeOverlay(root);
+              root.querySelectorAll('[data-shb],iframe').forEach(removeOverlay);
+            }
+
+            function isVisible(element, minimumWidth, minimumHeight) {
+              var rect = element.getBoundingClientRect();
+              var style = getComputedStyle(element);
+              return rect.width >= minimumWidth
+                && rect.height >= minimumHeight
+                && style.display !== 'none'
+                && style.visibility !== 'hidden'
+                && parseFloat(style.opacity || '1') > 0;
+            }
+
+            function mediaActive() {
+              var activeVideo = Array.from(document.querySelectorAll('video')).some(function(video) {
+                return !video.paused && !video.ended && isVisible(video, 180, 100);
+              });
+              var host = location.hostname.toLowerCase();
+              var path = location.pathname;
+              var playerPage =
+                ((host === 'aether.bar' || host.endsWith('.aether.bar')) && path.startsWith('/media/'))
+                || ((host === 'popcornmovies.io' || host.endsWith('.popcornmovies.io'))
+                  && path.startsWith('/watch/'));
+              var embeddedPlayer = playerPage
+                && Array.from(document.querySelectorAll('iframe')).some(function(frame) {
+                  return isVisible(frame, 240, 130);
+                });
+              return !!(document.fullscreenElement || document.webkitFullscreenElement
+                || activeVideo || embeddedPlayer);
+            }
+
+            var lastMediaState = null;
+            var reportScheduled = false;
+            function reportMedia() {
+              reportScheduled = false;
+              var active = mediaActive();
+              if (active === lastMediaState) return;
+              lastMediaState = active;
+              if (window.BlackBeardMedia) window.BlackBeardMedia.setActive(active);
+            }
+            function scheduleReport() {
+              if (reportScheduled) return;
+              reportScheduled = true;
+              requestAnimationFrame(reportMedia);
+            }
+
+            sweep(document);
+            new MutationObserver(function(mutations) {
+              mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes') removeOverlay(mutation.target);
+                else mutation.addedNodes.forEach(sweep);
+              });
+              scheduleReport();
+            }).observe(document.documentElement || document, {
+              attributes: true,
+              attributeFilter: ['class', 'style', 'src', 'data-shb'],
+              childList: true,
+              subtree: true
+            });
+
+            document.addEventListener('click', function(event) {
+              var node = event.target;
+              var link = node && node.closest
+                ? node.closest('a[target="_blank"],a[target="_new"]')
+                : null;
+              if (link) link.removeAttribute('target');
+              scheduleReport();
+            }, true);
+            ['play','playing','pause','ended','emptied','abort','fullscreenchange',
+              'webkitfullscreenchange'].forEach(function(eventName) {
+              document.addEventListener(eventName, scheduleReport, true);
+            });
+            window.addEventListener('resize', scheduleReport, true);
+            scheduleReport();
+          } catch (error) {}
+        })();
+        """;
 
     private enum Site {
         CINEBY("cineby", "Cineby", "https://cineby.at", "cineby.at"),
@@ -97,6 +209,7 @@ public final class MainActivity extends Activity {
     private View customView;
     private WebChromeClient.CustomViewCallback customViewCallback;
     private Site selectedSite;
+    private boolean inlineMediaActive;
     private final AtomicInteger blockedCount = new AtomicInteger(0);
 
     @Override
@@ -153,6 +266,7 @@ public final class MainActivity extends Activity {
 
         webView.setWebViewClient(new ProtectedWebViewClient());
         webView.setWebChromeClient(new ProtectedChromeClient());
+        webView.addJavascriptInterface(new MediaStateBridge(), "BlackBeardMedia");
     }
 
     private void buildInterface() {
@@ -361,6 +475,7 @@ public final class MainActivity extends Activity {
     }
 
     private void openSite(Site site) {
+        setInlineMediaActive(false);
         selectedSite = site;
         blockedCount.set(0);
         statusLabel.setText(R.string.protected_browser);
@@ -373,12 +488,14 @@ public final class MainActivity extends Activity {
     }
 
     private void displayBrowser() {
+        setInlineMediaActive(false);
         landingScreen.setVisibility(View.GONE);
         browserContent.setVisibility(View.VISIBLE);
         statusLabel.setText(R.string.protected_browser);
     }
 
     private void displayLandingScreen(boolean clearBrowser) {
+        setInlineMediaActive(false);
         if (customView != null) hideCustomView();
         if (clearBrowser) {
             webView.stopLoading();
@@ -445,10 +562,40 @@ public final class MainActivity extends Activity {
             || host.equals("googlesyndication.com")
             || host.endsWith(".googlesyndication.com")
             || host.equals("googleadservices.com")
-            || host.endsWith(".googleadservices.com");
+            || host.endsWith(".googleadservices.com")
+            || host.equals("butyrhopers.com")
+            || host.endsWith(".butyrhopers.com")
+            || host.equals("cutchbatete.com")
+            || host.endsWith(".cutchbatete.com")
+            || host.equals("rostelshute.shop")
+            || host.endsWith(".rostelshute.shop")
+            || host.equals("khalatisort.cyou")
+            || host.endsWith(".khalatisort.cyou")
+            || host.equals("mrdreamzone.com")
+            || host.endsWith(".mrdreamzone.com")
+            || host.equals("woolderstrolld.qpon")
+            || host.endsWith(".woolderstrolld.qpon");
+    }
+
+    private void setInlineMediaActive(boolean active) {
+        inlineMediaActive = active;
+        if (toolbar != null) toolbar.setVisibility(active ? View.GONE : View.VISIBLE);
+    }
+
+    private final class MediaStateBridge {
+        @JavascriptInterface
+        public void setActive(boolean active) {
+            runOnUiThread(() -> setInlineMediaActive(active));
+        }
     }
 
     private final class ProtectedWebViewClient extends WebViewClient {
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+            setInlineMediaActive(false);
+        }
+
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             if (!request.isForMainFrame()) return false;
@@ -462,7 +609,12 @@ public final class MainActivity extends Activity {
             WebView view,
             WebResourceRequest request
         ) {
-            if (isBlockedAdHost(request.getUrl().getHost())) {
+            Uri uri = request.getUrl();
+            boolean isPopcornAdFeed = selectedSite == Site.POPCORN
+                && selectedSite.includesHost(uri.getHost())
+                && uri.getPath() != null
+                && uri.getPath().startsWith("/api/ads");
+            if (isPopcornAdFeed || isBlockedAdHost(uri.getHost())) {
                 recordBlockedRequest();
                 return new WebResourceResponse(
                     "text/plain",
@@ -500,6 +652,43 @@ public final class MainActivity extends Activity {
         ) {
             recordBlockedRequest();
             return false;
+        }
+
+        @Override
+        public boolean onJsAlert(
+            WebView view,
+            String url,
+            String message,
+            JsResult result
+        ) {
+            recordBlockedRequest();
+            result.cancel();
+            return true;
+        }
+
+        @Override
+        public boolean onJsConfirm(
+            WebView view,
+            String url,
+            String message,
+            JsResult result
+        ) {
+            recordBlockedRequest();
+            result.cancel();
+            return true;
+        }
+
+        @Override
+        public boolean onJsPrompt(
+            WebView view,
+            String url,
+            String message,
+            String defaultValue,
+            JsPromptResult result
+        ) {
+            recordBlockedRequest();
+            result.cancel();
+            return true;
         }
 
         @Override

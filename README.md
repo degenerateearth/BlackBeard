@@ -22,11 +22,12 @@ loading screen on both platforms.
 BlackBeard preserves normal navigation and embedded media while:
 
 - preventing unwanted new windows, tabs, and JavaScript popups;
+- suppressing embedded ad boxes observed on Aether and Popcorn;
 - blocking top-level redirects away from the selected website;
 - preventing top-level links from unexpectedly opening other apps;
 - blocking the known ad and pop-under hosts inherited from the Cineby build;
 - keeping third-party media frames available for video playback; and
-- hiding the BlackBeard navigation bar during fullscreen video.
+- hiding the BlackBeard navigation bar during fullscreen and active inline video.
 
 Each selected site is restricted to its root domain and subdomains at the top
 level. The user can return to the BlackBeard site-selection screen from the
