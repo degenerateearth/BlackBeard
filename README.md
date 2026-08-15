@@ -11,6 +11,8 @@ The black landing screen lets the user choose a site and return to that menu
 at any time. The supplied BlackBeard artwork is used for the app icon and
 loading screen on both platforms.
 
+**[Download BlackBeard for Android (.apk)](./android/BlackBeard-Android-Test.apk)**
+
 ## Project contents
 
 - `ios/BlackBeard` — complete Swift/Xcode source for iPhone.
