@@ -3,7 +3,7 @@
 BlackBeard is an open-source browser utility for iPhone and Android. It opens
 three supported websites in a protected, app-contained web view:
 
-- [Cineby](https://cineby.at)
+- [Cinejoy](https://cinejoy.to/)
 - [Aether](https://aether.bar/)
 - [Popcorn](https://popcornmovies.io/)
 
@@ -25,7 +25,7 @@ BlackBeard preserves normal navigation and embedded media while:
 - suppressing embedded ad boxes observed on Aether and Popcorn;
 - blocking top-level redirects away from the selected website;
 - preventing top-level links from unexpectedly opening other apps;
-- blocking the known ad and pop-under hosts inherited from the Cineby build;
+- blocking known ad and pop-under hosts used by the supported movie sites;
 - keeping third-party media frames available for video playback; and
 - hiding the BlackBeard navigation bar during fullscreen and active inline video.
 

@@ -2,7 +2,7 @@
 
 BlackBeard is a protected three-site Android WebView browser for:
 
-- `https://cineby.at`
+- `https://cinejoy.to/`
 - `https://aether.bar/`
 - `https://popcornmovies.io/`
 
@@ -31,13 +31,13 @@ The packaged device-test APK is one folder above this project:
   and subdomains.
 - Blocks non-HTTPS app-opening URLs at the top level.
 - Replaces JavaScript `window.open()` and removes `_blank` link targets.
-- Blocks the ad-network hosts inherited from the approved Cineby build.
+- Blocks known ad-network hosts used by the supported movie sites.
 - Leaves embedded frames and media requests available for video playback.
 
 ## Android test checklist
 
 - Confirm the BlackBeard icon, name, and supplied loading artwork.
-- Confirm Cineby, Aether, and Popcorn open the correct destinations.
+- Confirm Cinejoy, Aether, and Popcorn open the correct destinations.
 - Browse normal internal links on all three sites.
 - Confirm popups, hostile tabs, redirects, and app-opening links are blocked.
 - Start a video, enter fullscreen, rotate to landscape, leave fullscreen, and

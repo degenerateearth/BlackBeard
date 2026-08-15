@@ -166,7 +166,7 @@ public final class MainActivity extends Activity {
         """;
 
     private enum Site {
-        CINEBY("cineby", "Cineby", "https://cineby.at", "cineby.at"),
+        CINEJOY("cinejoy", "Cinejoy", "https://cinejoy.to/", "cinejoy.to"),
         AETHER("aether", "Aether", "https://aether.bar/", "aether.bar"),
         POPCORN("popcorn", "Popcorn", "https://popcornmovies.io/", "popcornmovies.io");
 

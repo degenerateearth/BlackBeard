@@ -2,7 +2,7 @@ import Foundation
 import WebKit
 
 enum BrowserSite: String, CaseIterable, Identifiable {
-    case cineby
+    case cinejoy
     case aether
     case popcorn
 
@@ -10,7 +10,7 @@ enum BrowserSite: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .cineby: "Cineby"
+        case .cinejoy: "Cinejoy"
         case .aether: "Aether"
         case .popcorn: "Popcorn"
         }
@@ -18,7 +18,7 @@ enum BrowserSite: String, CaseIterable, Identifiable {
 
     var url: URL {
         switch self {
-        case .cineby: URL(string: "https://cineby.at")!
+        case .cinejoy: URL(string: "https://cinejoy.to/")!
         case .aether: URL(string: "https://aether.bar/")!
         case .popcorn: URL(string: "https://popcornmovies.io/")!
         }
@@ -26,7 +26,7 @@ enum BrowserSite: String, CaseIterable, Identifiable {
 
     private var rootHost: String {
         switch self {
-        case .cineby: "cineby.at"
+        case .cinejoy: "cinejoy.to"
         case .aether: "aether.bar"
         case .popcorn: "popcornmovies.io"
         }
