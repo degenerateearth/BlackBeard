@@ -1,9 +1,9 @@
 import Foundation
 
 enum BlockerRules {
-    static let identifier = "BlackBeardBlockerRules-v3"
+    static let identifier = "BlackBeardBlockerRules-v4"
 
-    // Site-specific rules cover the rotating networks observed on Cineby.
+    // Site-specific rules cover the rotating networks used by the movie sites.
     // Common ad and popup rules apply to every BlackBeard destination.
     // Top-level redirects are independently stopped by BrowserView.
     static let json = #"""
@@ -11,21 +11,21 @@ enum BlockerRules {
       {
         "trigger": {
           "url-filter": "^https?://([^/]+\\.)?blirtonethe\\.com/.*",
-          "if-domain": ["cineby.at", "*.cineby.at"]
+          "if-domain": ["cinejoy.to", "*.cinejoy.to"]
         },
         "action": { "type": "block" }
       },
       {
         "trigger": {
           "url-filter": "^https?://b\\.5ei1zlm7w7ut9bezxfj5\\.cfd/.*",
-          "if-domain": ["cineby.at", "*.cineby.at"]
+          "if-domain": ["cinejoy.to", "*.cinejoy.to"]
         },
         "action": { "type": "block" }
       },
       {
         "trigger": {
           "url-filter": "^https?://([^/]+\\.)?(popads\\.net|popcash\\.net|propellerads\\.com|onclicka\\.com|adsterra\\.com|doubleclick\\.net|googlesyndication\\.com|googleadservices\\.com|butyrhopers\\.com|cutchbatete\\.com|rostelshute\\.shop|khalatisort\\.cyou|mrdreamzone\\.com|woolderstrolld\\.qpon)/.*",
-          "if-domain": ["cineby.at", "*.cineby.at", "aether.bar", "*.aether.bar", "popcornmovies.io", "*.popcornmovies.io"]
+          "if-domain": ["cinejoy.to", "*.cinejoy.to", "aether.bar", "*.aether.bar", "popcornmovies.io", "*.popcornmovies.io"]
         },
         "action": { "type": "block" }
       },
@@ -40,7 +40,7 @@ enum BlockerRules {
         "trigger": {
           "url-filter": ".*",
           "resource-type": ["popup"],
-          "if-domain": ["cineby.at", "*.cineby.at", "aether.bar", "*.aether.bar", "popcornmovies.io", "*.popcornmovies.io"]
+          "if-domain": ["cinejoy.to", "*.cinejoy.to", "aether.bar", "*.aether.bar", "popcornmovies.io", "*.popcornmovies.io"]
         },
         "action": { "type": "block" }
       }

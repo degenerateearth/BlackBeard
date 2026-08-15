@@ -2,7 +2,7 @@
 
 BlackBeard is a protected three-site browser for:
 
-- `https://cineby.at`
+- `https://cinejoy.to/`
 - `https://aether.bar/`
 - `https://popcornmovies.io/`
 
@@ -15,7 +15,7 @@ browser bar returns to that screen from any selected site.
 - Top-level redirects away from the currently selected site
 - Links that try to open another app through a non-HTTPS URL scheme
 - JavaScript calls to `window.open()`
-- The ad-script domains observed on Cineby during development
+- The ad-script domains observed on the supported movie sites during development
 - Several common pop-under advertising networks on all three sites
 
 Embedded frames and media requests remain available so third-party video
@@ -40,7 +40,7 @@ signing.
 
 - Confirm the supplied BlackBeard artwork appears during launch.
 - Confirm the app icon and the name beneath it are BlackBeard.
-- Open Cineby, Aether, and Popcorn and confirm each button reaches the correct
+- Open Cinejoy, Aether, and Popcorn and confirm each button reaches the correct
   destination.
 - On each site, browse through normal internal links.
 - Trigger or encounter a popup and confirm it does not create a new window.
